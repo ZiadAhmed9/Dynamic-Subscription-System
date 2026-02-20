@@ -20,6 +20,11 @@ def seed():
     with app.app_context():
         db.create_all()
 
+        # Check if already seeded
+        if Service.query.first():
+            print("⚠ Seed data already exists — skipping.")
+            return
+
         # -- Services --
         car_wash = Service(name="Car Washing", description="Professional car wash service")
         gardening = Service(name="Gardening", description="Lawn and garden maintenance")

@@ -12,7 +12,6 @@ This system allows residential communities to manage subscriptions for any type 
 ```bash
 # Create virtual environment
 python -m venv venv
-
 #For Linux
 source venv/bin/activate
 #For Windows
