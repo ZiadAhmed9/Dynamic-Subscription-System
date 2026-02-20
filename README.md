@@ -1,10 +1,55 @@
 # Dynamic Subscription System
 
-A fully dynamic, configuration-driven subscription engine built with **Python + Flask + PostgreSQL**, following **Clean Architecture** and **SOLID** principles.
+A fully dynamic, configuration-driven subscription engine built with **Python + Flask + PostgreSQL**.
 
 ## Overview
-
 This system allows residential communities to manage subscriptions for any type of service (car washing, gardening, pool cleaning, etc.) without modifying backend code. New services, plans, and pricing strategies are added entirely through the admin dashboard API.
+
+---
+
+## How to Run
+
+### Using Docker (recommended)
+
+```bash
+docker-compose up --build
+```
+
+Then run migrations:
+
+```bash
+docker exec subscription_api flask db init
+docker exec subscription_api flask db migrate -m "initial"
+docker exec subscription_api flask db upgrade
+```
+
+### Local Development (without Docker)
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment
+set FLASK_APP=app:create_app  # Windows
+export FLASK_APP=app:create_app  # Linux/Mac
+
+# Init DB (SQLite by default)
+flask db init
+flask db migrate -m "initial"
+flask db upgrade
+
+# Seed demo data
+python seed.py
+
+# Run server
+flask run
+```
+
+Swagger UI available at: **http://localhost:5000/**
 
 ---
 
@@ -21,7 +66,8 @@ Domain Layer                 → Rule Engine + Pricing Engine
     ↓
 Repository Layer             → Database abstraction (SQLAlchemy)
 ```
-
+## Database Design
+![Database Design](images/image.png)
 Business logic is **completely decoupled from Flask**. The Rule Engine and Pricing Engine can be unit-tested without any framework dependency.
 
 ### Key Design Patterns
@@ -60,8 +106,6 @@ The **RuleEngine** validates requests against these rules. The **PricingEngine**
 1. `POST /dashboard/services` — Create the service record
 2. `POST /dashboard/plans` — Create a plan with the rules JSON
 3. Done — the mobile API automatically surfaces the new service
-
-**No backend code changes required.**
 
 ---
 
@@ -112,52 +156,6 @@ app/
 | PATCH | `/dashboard/subscriptions/<id>/status` | Update request status |
 | POST | `/dashboard/customers` | Create customer |
 | POST | `/dashboard/customers/<id>/assets` | Add asset to customer |
-
----
-
-## How to Run
-
-### Using Docker (recommended)
-
-```bash
-docker-compose up --build
-```
-
-Then run migrations:
-
-```bash
-docker exec subscription_api flask db init
-docker exec subscription_api flask db migrate -m "initial"
-docker exec subscription_api flask db upgrade
-```
-
-### Local Development (without Docker)
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment
-set FLASK_APP=app:create_app  # Windows
-export FLASK_APP=app:create_app  # Linux/Mac
-
-# Init DB (SQLite by default)
-flask db init
-flask db migrate -m "initial"
-flask db upgrade
-
-# Seed demo data
-python seed.py
-
-# Run server
-flask run
-```
-
-Swagger UI available at: **http://localhost:5000/**
 
 ---
 
