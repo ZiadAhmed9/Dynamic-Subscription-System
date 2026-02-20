@@ -1,6 +1,6 @@
 # Dynamic Subscription System
 
-A fully dynamic, configuration-driven subscription engine built with **Python + Flask + PostgreSQL**.
+A fully dynamic, configuration-driven subscription engine built with **Python + Flask" or "Python + Flask + SQLAlchemy**.
 
 ## Overview
 This system allows residential communities to manage subscriptions for any type of service (car washing, gardening, pool cleaning, etc.) without modifying backend code. New services, plans, and pricing strategies are added entirely through the admin dashboard API.
@@ -8,22 +8,6 @@ This system allows residential communities to manage subscriptions for any type 
 ---
 
 ## How to Run
-
-### Using Docker (recommended)
-
-```bash
-docker-compose up --build
-```
-
-Then run migrations:
-
-```bash
-docker exec subscription_api flask db init
-docker exec subscription_api flask db migrate -m "initial"
-docker exec subscription_api flask db upgrade
-```
-
-### Local Development (without Docker)
 
 ```bash
 # Create virtual environment
@@ -66,8 +50,12 @@ Domain Layer                 → Rule Engine + Pricing Engine
     ↓
 Repository Layer             → Database abstraction (SQLAlchemy)
 ```
+
+---
+
 ## Database Design
 ![Database Design](images/image.png)
+
 Business logic is **completely decoupled from Flask**. The Rule Engine and Pricing Engine can be unit-tested without any framework dependency.
 
 ### Key Design Patterns
