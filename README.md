@@ -1,169 +1,164 @@
 # Dynamic Subscription System
 
-A fully dynamic, configuration-driven subscription engine built with **Python + Flask + SQLAlchemy**.
+Configuration-driven subscription engine built with Python, Flask, and SQLAlchemy.
 
 ## Overview
-This system allows residential communities to manage subscriptions for any type of service (car washing, gardening, pool cleaning, etc.) without modifying backend code. New services, plans, and pricing strategies are added entirely through the admin dashboard API.
+This system lets communities manage subscriptions for services (car wash, gardening, pool cleaning, etc.) without backend code changes. New services and plans are created through API endpoints.
 
----
+## Prerequisites
+- Python 3.11+
+- `pip`
+- Optional: Docker Desktop (for containerized run)
 
-## How to Run
+## Quick Start (Recommended: Local SQLite)
+
+1. Create and activate a virtual environment.
 
 ```bash
-# Create virtual environment
 python -m venv venv
-# For Linux
+```
+
+PowerShell:
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+Command Prompt (`cmd.exe`):
+```bat
+venv\Scripts\activate.bat
+```
+
+Linux/macOS:
+```bash
 source venv/bin/activate
-# For Windows
-venv\Scripts\activate
+```
 
-# Install dependencies
+2. Install dependencies.
+
+```bash
 pip install -r requirements.txt
+```
 
-# Set environment
-set FLASK_APP=app:create_app  # Windows
-export FLASK_APP=app:create_app  # Linux/Mac
+3. Seed demo data (also creates tables).
 
-# Seed demo data (also creates tables automatically)
+```bash
 python seed.py
-
-# Run server
-flask run
 ```
 
-Swagger UI available at: **http://localhost:5000/**
+4. Start the server.
 
----
-
-## Architecture
-
-The system follows Clean Architecture with four distinct layers:
-
-```
-API Layer (Flask-RESTX)      → HTTP handling, Swagger docs
-    ↓
-Service Layer                → Use-case orchestration
-    ↓
-Domain Layer                 → Rule Engine + Pricing Engine
-    ↓
-Repository Layer             → Database abstraction (SQLAlchemy)
+```bash
+python -m flask --app app run
 ```
 
----
+5. Open Swagger UI.
 
-## Database Design
-![Database Design](images/image.png)
+`http://localhost:5000/`
 
-Business logic is **completely decoupled from Flask**. The Rule Engine and Pricing Engine can be unit-tested without any framework dependency.
+## Docker Setup (PostgreSQL + API)
 
-### Key Design Patterns
+1. Build and start containers.
 
-- **Strategy Pattern** — Pricing calculation (`FixedPricingStrategy`, `PerAssetPricingStrategy`, `PerAreaPricingStrategy`)
-- **Factory Pattern** — `PricingEngine` selects the strategy from plan configuration
-- **Repository Pattern** — Generic `BaseRepository` with domain-specific extensions
-- **App Factory** — Flask application built via `create_app()` for testability
-
----
-
-## Dynamic Rule Engine
-
-Subscription plans store all business rules as JSON:
-
-```json
-{
-  "pricing_type": "per_asset",
-  "price": 50.0,
-  "billing_cycle_months": 1,
-  "min_duration_months": 3,
-  "payment_type": "prepaid",
-  "requires_inspection": true,
-  "inspection_fee": 20.0,
-  "proration": { "enabled": true, "method": "daily" },
-  "applicable_asset_types": ["car"]
-}
+```bash
+docker compose up --build -d
 ```
 
-The **RuleEngine** validates requests against these rules. The **PricingEngine** calculates costs using the appropriate strategy. Both are fully data-driven — no hardcoded service names or `if/else` blocks.
+2. Seed demo data inside the API container.
 
----
-
-## How to Add a New Service
-
-1. `POST /dashboard/services` — Create the service record
-2. `POST /dashboard/plans` — Create a plan with the rules JSON
-3. Done — the mobile API automatically surfaces the new service
-
----
-
-## Project Structure
-
-```
-app/
-├── __init__.py          # Flask app factory
-├── extensions.py        # SQLAlchemy, Migrate singletons
-├── config/settings.py   # Dev / Test / Prod configurations
-├── domain/
-│   ├── models.py        # 6 generic ORM models
-│   ├── pricing_engine.py # Strategy Pattern pricing
-│   ├── rule_engine.py   # Data-driven rule validation
-│   └── exceptions.py    # Custom exception hierarchy
-├── repositories/        # Generic BaseRepository + domain repos
-├── services/            # Use-case orchestration classes
-├── schemas/             # Pydantic v2 validation
-└── api/
-    ├── mobile.py        # Resident-facing endpoints
-    └── dashboard.py     # Admin endpoints
+```bash
+docker compose exec api python seed.py
 ```
 
----
+3. Open Swagger UI.
+
+`http://localhost:5000/`
+
+4. Stop containers when done.
+
+```bash
+docker compose down
+```
+
+## Run Tests
+
+```bash
+python -m pytest tests -v --tb=short
+```
+
+## Run Live API Smoke Test
+Start the server first, then run:
+
+```bash
+python postman_test.py
+```
 
 ## API Endpoints
 
 ### Mobile (`/mobile`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/mobile/services` | Active services with plans |
-| GET | `/mobile/customers/<id>/assets` | Customer assets (filter by type) |
-| POST | `/mobile/subscriptions` | Create subscription request |
-| GET | `/mobile/subscriptions/<id>` | View request + cost breakdown |
+- `GET /mobile/services` - List active services with plans
+- `GET /mobile/customers/<id>/assets` - List customer assets (optional asset type filter)
+- `GET /mobile/customers/<id>/services/<service_id>/assets` - List customer assets applicable to a service
+- `POST /mobile/subscriptions` - Create a subscription request
+- `GET /mobile/subscriptions/<id>` - Get request details and cost breakdown
 
 ### Dashboard (`/dashboard`)
+- `POST /dashboard/services` - Create service
+- `PUT /dashboard/services/<id>` - Update service
+- `GET /dashboard/services` - List services
+- `POST /dashboard/plans` - Create plan with rules JSON
+- `PUT /dashboard/plans/<id>` - Update plan and rules
+- `GET /dashboard/plans` - List plans
+- `GET /dashboard/subscriptions` - List requests (supports filters)
+- `PATCH /dashboard/subscriptions/<id>/status` - Update request status
+- `POST /dashboard/customers` - Create customer
+- `POST /dashboard/customers/<id>/assets` - Add customer asset
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/dashboard/services` | Create service |
-| PUT | `/dashboard/services/<id>` | Update service |
-| GET | `/dashboard/services` | List all services |
-| POST | `/dashboard/plans` | Create plan with rules |
-| PUT | `/dashboard/plans/<id>` | Update plan + rules |
-| GET | `/dashboard/plans` | List plans (filter by service) |
-| GET | `/dashboard/subscriptions` | List requests (filter: status, inspection) |
-| PATCH | `/dashboard/subscriptions/<id>/status` | Update request status |
-| POST | `/dashboard/customers` | Create customer |
-| POST | `/dashboard/customers/<id>/assets` | Add asset to customer |
+## Architecture
 
----
-
-## Testing
-
-```bash
-pytest tests/ -v --tb=short
+```text
+API Layer (Flask-RESTX): HTTP handling, docs
+Service Layer: use-case orchestration
+Domain Layer: rule engine and pricing engine
+Repository Layer: SQLAlchemy data access
 ```
 
-Test coverage:
-- **Pricing Engine** — All 3 strategies, inspection fee, proration, edge cases
-- **Rule Engine** — Duration, asset types, billing cycles, multi-violation collection
-- **Integration** — Full subscription workflow via API, rule violation handling, dashboard operations
+## Tech Stack
 
----
+- Python 3.11
+- Flask (App Factory Pattern)
+- Flask-RESTX (Swagger)
+- SQLAlchemy (ORM)
+- Pydantic (Validation)
+- PostgreSQL (Docker setup)
+- SQLite (Local dev)
+- Pytest (Testing)
+- Docker & Docker Compose
 
-## Trade-offs & Decisions
+## Project Structure
 
-| Decision | Rationale |
-|----------|-----------|
-| JSON rules column | Maximum flexibility for dynamic configuration without schema migrations |
-| Strategy Pattern for pricing | Open/Closed principle — add new pricing types without modifying existing code |
-| SQLite fallback | Enables local development without Docker/PostgreSQL |
-| Pydantic for validation | Framework-agnostic validation separate from Flask-RESTX Swagger models |
-| Simplified 30-day month | Proration uses fixed 30-day months for simplicity; production would use calendar days |
+```text
+app/
+  __init__.py            # Flask app factory
+  extensions.py          # SQLAlchemy singleton
+  config/settings.py     # Environment configs
+  domain/                # Models, rule engine, pricing engine
+  repositories/          # BaseRepository + domain repositories
+  services/              # Use-case services
+  schemas/               # Pydantic validation
+  api/                   # Mobile and dashboard endpoints
+```
+
+## Database Design
+![Database Design](images/image.png)
+
+## Design Decisions
+
+- Layered architecture to isolate business logic from HTTP concerns.
+- Rule engine and pricing logic are configuration-driven (JSON).
+- SQLite for simplicity in local development.
+- PostgreSQL for production-grade Docker setup.
+
+## Notes
+- Default local database is SQLite (`dev.db`) unless `DATABASE_URL` is set.
+- Rule and pricing logic is data-driven from plan JSON rules.
+- New services can be added through dashboard endpoints without code changes.
