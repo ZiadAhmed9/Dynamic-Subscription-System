@@ -78,6 +78,20 @@ _customer_svc = CustomerService()
 _subscription_svc = SubscriptionService()
 
 
+def _parse_optional_bool(param_name: str):
+    """Parse a tri-state boolean query param (true/false/None)."""
+    raw = request.args.get(param_name)
+    if raw is None:
+        return None
+
+    value = raw.strip().lower()
+    if value in {"true", "1", "yes"}:
+        return True
+    if value in {"false", "0", "no"}:
+        return False
+    raise ValueError(f"Invalid boolean value for '{param_name}': {raw}")
+
+
 # ---------------------------------------------------------------------------
 # Service routes
 # ---------------------------------------------------------------------------
@@ -189,11 +203,14 @@ class SubscriptionList(Resource):
     @ns.doc("list_subscriptions")
     def get(self):
         """List subscriptions (?status=, ?needs_inspection=true)."""
-        status = request.args.get("status")
-        needs_inspection = request.args.get("needs_inspection", "").lower() == "true" or None
-        return success_response(
-            _subscription_svc.list_subscriptions(status, needs_inspection),
-        )
+        try:
+            status = request.args.get("status")
+            needs_inspection = _parse_optional_bool("needs_inspection")
+            return success_response(
+                _subscription_svc.list_subscriptions(status, needs_inspection),
+            )
+        except ValueError as err:
+            return error_response(str(err), "VALIDATION_ERROR", 400)
 
 
 @ns.route("/subscriptions/<int:request_id>/status")

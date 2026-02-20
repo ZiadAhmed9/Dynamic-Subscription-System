@@ -47,5 +47,9 @@ class SubscriptionRepository(BaseRepository[SubscriptionRequest]):
             query = query.filter(
                 SubscriptionRequest.status == "pending_inspection",
             )
+        elif needs_inspection is False:
+            query = query.filter(
+                SubscriptionRequest.status != "pending_inspection",
+            )
 
         return query.all()

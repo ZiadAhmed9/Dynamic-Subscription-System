@@ -367,6 +367,50 @@ class TestDashboardAPI:
         assert len(data) == 1
         assert data[0]["status"] == "pending_inspection"
 
+    def test_list_subscriptions_with_needs_inspection_false_filter(self, client):
+        _, plan_id = _setup_service_and_plan(client)
+        customer_id, asset_ids = _setup_customer_with_assets(client)
+        _post_json(client, "/mobile/subscriptions", {
+            "customer_id": customer_id,
+            "plan_id": plan_id,
+            "duration_months": 3,
+            "asset_ids": asset_ids,
+        })
+
+        _, svc = _post_json(client, "/dashboard/services", {"name": "Inspection Service 2"})
+        _, plan = _post_json(client, "/dashboard/plans", {
+            "service_id": svc["data"]["id"],
+            "name": "Inspection Plan 2",
+            "rules": {
+                "pricing_type": "fixed",
+                "price": 100,
+                "billing_cycle_months": 1,
+                "min_duration_months": 1,
+                "payment_type": "prepaid",
+                "requires_inspection": True,
+                "inspection_fee": 10,
+                "proration": {"enabled": False},
+                "applicable_asset_types": ["car"],
+            },
+        })
+        _post_json(client, "/mobile/subscriptions", {
+            "customer_id": customer_id,
+            "plan_id": plan["data"]["id"],
+            "duration_months": 1,
+            "asset_ids": [asset_ids[0]],
+        })
+
+        resp = client.get("/dashboard/subscriptions?needs_inspection=false")
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert len(data) == 1
+        assert data[0]["status"] == "pending"
+
+    def test_list_subscriptions_with_invalid_needs_inspection_value_returns_400(self, client):
+        resp = client.get("/dashboard/subscriptions?needs_inspection=maybe")
+        assert resp.status_code == 400
+        assert resp.get_json()["error_code"] == "VALIDATION_ERROR"
+
     def test_create_plan_with_invalid_pricing_type_format_returns_400(self, client):
         _, svc = _post_json(client, "/dashboard/services", {"name": "Bad Plan Service"})
         status, body = _post_json(client, "/dashboard/plans", {
