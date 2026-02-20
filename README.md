@@ -1,6 +1,6 @@
 # Dynamic Subscription System
 
-A fully dynamic, configuration-driven subscription engine built with **Python + Flask" or "Python + Flask + SQLAlchemy**.
+A fully dynamic, configuration-driven subscription engine built with **Python + Flask + SQLAlchemy**.
 
 ## Overview
 This system allows residential communities to manage subscriptions for any type of service (car washing, gardening, pool cleaning, etc.) without modifying backend code. New services, plans, and pricing strategies are added entirely through the admin dashboard API.
@@ -12,9 +12,9 @@ This system allows residential communities to manage subscriptions for any type 
 ```bash
 # Create virtual environment
 python -m venv venv
-#For Linux
+# For Linux
 source venv/bin/activate
-#For Windows
+# For Windows
 venv\Scripts\activate
 
 # Install dependencies
@@ -24,12 +24,7 @@ pip install -r requirements.txt
 set FLASK_APP=app:create_app  # Windows
 export FLASK_APP=app:create_app  # Linux/Mac
 
-# Init DB (SQLite by default)
-flask db init
-flask db migrate -m "initial"
-flask db upgrade
-
-# Seed demo data
+# Seed demo data (also creates tables automatically)
 python seed.py
 
 # Run server

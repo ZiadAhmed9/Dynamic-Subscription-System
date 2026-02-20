@@ -14,7 +14,7 @@ from flask.json.provider import DefaultJSONProvider
 from flask_restx import Api
 
 from app.config.settings import CONFIG_MAP
-from app.extensions import db, migrate
+from app.extensions import db
 
 
 class CustomJSONProvider(DefaultJSONProvider):
@@ -44,7 +44,9 @@ def create_app(config_name: str | None = None) -> Flask:
 
     # --- Extensions ---
     db.init_app(app)
-    migrate.init_app(app, db)
+
+    with app.app_context():
+        db.create_all()
 
     # --- Logging ---
     logging.basicConfig(

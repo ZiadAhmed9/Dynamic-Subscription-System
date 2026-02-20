@@ -1,7 +1,6 @@
 Flask
 Flask-RESTX
 Flask-SQLAlchemy
-Flask-Migrate
 psycopg2-binary
 pydantic[email]
 pytest
