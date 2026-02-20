@@ -167,15 +167,3 @@ Test coverage:
 | SQLite fallback | Enables local development without Docker/PostgreSQL |
 | Pydantic for validation | Framework-agnostic validation separate from Flask-RESTX Swagger models |
 | Simplified 30-day month | Proration uses fixed 30-day months for simplicity; production would use calendar days |
-
----
-
-## Future Improvements
-
-- Event-driven billing system (subscription renewal, payment notifications)
-- Subscription renewal automation with scheduling
-- Caching layer for frequently accessed plans
-- Admin analytics dashboard (revenue, subscriptions per service)
-- JWT authentication for API security
-- Rate limiting and request throttling
-- Audit logging for plan rule changes
