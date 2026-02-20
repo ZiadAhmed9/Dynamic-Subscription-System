@@ -10,6 +10,7 @@ class SubscriptionCreateSchema(BaseModel):
     plan_id: int = Field(..., gt=0)
     duration_months: int = Field(..., gt=0)
     asset_ids: list[int] = Field(default_factory=list)
+    days_remaining: int | None = Field(None, ge=0, description="Days left in current cycle (for prorated plans)")
 
 
 class SubscriptionStatusUpdateSchema(BaseModel):

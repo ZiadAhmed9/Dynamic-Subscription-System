@@ -119,6 +119,7 @@ class SubscriptionCreate(Resource):
                 plan_id=data.plan_id,
                 duration_months=data.duration_months,
                 asset_ids=data.asset_ids,
+                days_remaining=data.days_remaining,
             )
             return success_response(result, 201)
         except PydanticValidationError as err:

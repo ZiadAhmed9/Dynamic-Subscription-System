@@ -34,6 +34,7 @@ class SubscriptionService:
         plan_id: int,
         duration_months: int,
         asset_ids: list[int],
+        days_remaining: int | None = None,
     ) -> dict:
         """Create a subscription request.
 
@@ -55,6 +56,12 @@ class SubscriptionService:
         assets = self._resolve_assets(customer_id, asset_ids)
         asset_dicts = [a.to_dict() for a in assets]
         rules = plan.rules
+
+        # Inject days_remaining into proration config if provided by client
+        if days_remaining is not None:
+            proration = rules.get("proration", {})
+            if proration.get("enabled"):
+                rules = {**rules, "proration": {**proration, "days_remaining": days_remaining}}
 
         # --- Rule validation ---
         self._rule_engine.validate(rules, duration_months, asset_dicts)
